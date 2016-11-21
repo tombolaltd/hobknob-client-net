@@ -1,69 +1,71 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HobknobClientNet.Api;
+using HobknobClientNet.Api.Response;
 
 namespace HobknobClientNet
 {
     internal class FeatureToggleProvider
     {
-        private readonly EtcdClient _etcdClient;
-        private readonly Uri _applicationDirectoryKey;
+        private readonly ApiClient _apiClient;
 
-        public FeatureToggleProvider(EtcdClient etcdClient, string applicationName)
+        public FeatureToggleProvider(ApiClient apiClient)
         {
-            _etcdClient = etcdClient;
-            _applicationDirectoryKey = new Uri(string.Format("v1/toggles/{0}", applicationName), UriKind.Relative);
+            _apiClient = apiClient;
         }
 
         public IEnumerable<KeyValuePair<string, bool>> Get()
         {
-            var etcdResponse = _etcdClient.Get(_applicationDirectoryKey);
+            var features = new List<KeyValuePair<string, bool>>();
 
-            if (etcdResponse == null || etcdResponse.Node.Nodes == null)
+            var apiResponse = _apiClient.Get();
+
+            if (apiResponse?.Categories == null)
             {
-                return Enumerable.Empty<KeyValuePair<string, bool>>();
+                return features;
             }
 
-            return etcdResponse.Node.Nodes
-                .Select(node =>
+            BuildSimpleFeatureToggles(features, apiResponse);
+
+            BuildMultiFeatureToggles(features, apiResponse);
+
+            return features;
+        }
+
+        private void BuildMultiFeatureToggles(List<KeyValuePair<string, bool>> features, ApiResponse apiResponse)
+        {
+            var multiToggleCategories = apiResponse.Categories.Where(x => x.Value.Id != 0);
+
+            foreach (var category in multiToggleCategories)
+            {
+                foreach (var feature in category.Value.Features)
                 {
-                    if (node.Dir)
+                    var valueIndex = 0;
+
+                    foreach (var value in feature.Values)
                     {
-                        return node.Nodes
-                            .Where(x => !x.Key.EndsWith("/@meta"))
-                            .Select(x => new KeyValuePair<string, bool?>(ExtractFeatureToggleName(x.Key),
-                                ParseFeatureToggleValue(x.Key, x.Value)))
-                            .ToArray();
+                        if (value.HasValue)
+                        {
+                            features.Add(new KeyValuePair<string, bool>(feature.Name + "/" + category.Value.Columns[valueIndex], value.Value));
+                        }
+
+                        valueIndex++;
                     }
-                    return new[]
-                    {
-                        new KeyValuePair<string, bool?>(ExtractFeatureToggleName(node.Key),
-                            ParseFeatureToggleValue(node.Key, node.Value))
-                    };
-                })
-                .SelectMany(x => x)
-                .Where(pair => pair.Value.HasValue)
-                .Select(pair => new KeyValuePair<string, bool>(pair.Key, pair.Value.Value));
-        }
-
-        private static bool? ParseFeatureToggleValue(string key, string value)
-        {
-            if (value == null) return null;
-
-            switch (value.ToLower())
-            {
-                case "true":
-                    return true;
-                case "false":
-                    return false;
-                default:
-                    return null;
+                }
             }
         }
 
-        private static string ExtractFeatureToggleName(string name)
+        private void BuildSimpleFeatureToggles(List<KeyValuePair<string, bool>> features, ApiResponse apiResponse)
         {
-            return name.Split('/').Last();
+            var simpleToggles = apiResponse.Categories.FirstOrDefault(x => x.Value.Id == 0);
+
+            if (!simpleToggles.Value.Features.Any())
+            {
+                return;
+            }
+
+            features.AddRange(simpleToggles.Value.Features.Select(feature => new KeyValuePair<string, bool>(feature.Name, (bool)feature.Values.First())));
         }
     }
 }

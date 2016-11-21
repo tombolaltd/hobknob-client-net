@@ -42,6 +42,10 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\ApiClient.cs" />
+    <Compile Include="Api\Response\Category.cs" />
+    <Compile Include="Api\Response\Feature.cs" />
+    <Compile Include="Api\Response\ApiResponse.cs" />
     <Compile Include="CacheUpdate.cs" />
     <Compile Include="CacheUpdatedArgs.cs" />
     <Compile Include="CacheUpdateFailedArgs.cs" />

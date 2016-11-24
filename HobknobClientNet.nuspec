@@ -5,8 +5,8 @@
     <authors>OpenTable, Tombola Ltd</authors>
     <owners>OpenTable, Tombola Ltd</owners>
     <description>A .net client for Hobknob</description>
-    <files>
-        <file src="HobknobClientNet\bin\**\*.*" exclude="HobknobClientNet\bin\*.pdb" target="bin" />
-    </files>
   </metadata>
+  <files>
+    <file src="HobknobClientNet\bin\**\*.*" exclude="HobknobClientNet\bin\*.pdb" target="bin" />
+  </files>
 </package>

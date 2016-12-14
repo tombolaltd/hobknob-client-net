@@ -7,6 +7,6 @@
     <description>A .net client for Hobknob</description>
   </metadata>
   <files>
-    <file src="HobknobClientNet\bin\**\*.*" exclude="HobknobClientNet\bin\*.pdb" target="bin" />
+    <file src="HobknobClientNet\bin\**\*.*" exclude="HobknobClientNet\bin\*.pdb" target="lib" />
   </files>
 </package>

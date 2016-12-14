@@ -1,6 +1,6 @@
 <?xml version="1.0"?><package>
   <metadata>
-    <id>tombola-hobknob-client-net</id>
+    <id>Tombola.FeatureToggles.Client.Net</id>
     <version>1.0.0</version>
     <authors>OpenTable, Tombola Ltd</authors>
     <owners>OpenTable, Tombola Ltd</owners>
